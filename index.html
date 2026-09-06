@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>isitstockholm</title>
+    <style>
+      :root {
+        color-scheme: light;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        background: #fff;
+        color: #000;
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        font-size: clamp(2rem, 7vw, 5rem);
+        text-align: center;
+      }
+
+      #confetti {
+        position: fixed;
+        inset: 0;
+        width: 100vw;
+        height: 100vh;
+        pointer-events: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="message" aria-live="polite"></div>
+    <canvas id="confetti" hidden></canvas>
+    <script>
+      (function () {
+        const targetYear = 2026;
+        const targetMonthIndex = 8;
+        const targetDay = 18;
+
+        const now = new Date();
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const target = new Date(targetYear, targetMonthIndex, targetDay);
+        const msPerDay = 24 * 60 * 60 * 1000;
+        const dayDiff = Math.round((target - today) / msPerDay);
+
+        const message = document.getElementById("message");
+        const canvas = document.getElementById("confetti");
+
+        if (dayDiff === 0) {
+          message.textContent = "yes 🥳";
+          startConfetti(canvas);
+          return;
+        }
+
+        if (dayDiff > 0) {
+          message.textContent = `Nope, ${dayDiff} days left`;
+          return;
+        }
+
+        message.textContent = "Nope, 0 days left";
+
+        function startConfetti(targetCanvas) {
+          targetCanvas.hidden = false;
+          const ctx = targetCanvas.getContext("2d");
+          const particles = [];
+          const colors = ["#000"];
+          const particleCount = 160;
+
+          function resize() {
+            targetCanvas.width = window.innerWidth;
+            targetCanvas.height = window.innerHeight;
+          }
+
+          function createParticle() {
+            return {
+              x: Math.random() * targetCanvas.width,
+              y: Math.random() * -targetCanvas.height,
+              w: 4 + Math.random() * 6,
+              h: 6 + Math.random() * 8,
+              vx: -1 + Math.random() * 2,
+              vy: 2 + Math.random() * 3,
+              rot: Math.random() * Math.PI,
+              vr: -0.15 + Math.random() * 0.3,
+              color: colors[(Math.random() * colors.length) | 0],
+            };
+          }
+
+          function populate() {
+            particles.length = 0;
+            for (let i = 0; i < particleCount; i += 1) {
+              particles.push(createParticle());
+            }
+          }
+
+          function draw() {
+            ctx.clearRect(0, 0, targetCanvas.width, targetCanvas.height);
+
+            for (const p of particles) {
+              p.x += p.vx;
+              p.y += p.vy;
+              p.rot += p.vr;
+
+              if (p.y > targetCanvas.height + 20) {
+                p.y = -20;
+                p.x = Math.random() * targetCanvas.width;
+              }
+
+              ctx.save();
+              ctx.translate(p.x, p.y);
+              ctx.rotate(p.rot);
+              ctx.fillStyle = p.color;
+              ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+              ctx.restore();
+            }
+
+            requestAnimationFrame(draw);
+          }
+
+          resize();
+          populate();
+          window.addEventListener("resize", resize);
+          draw();
+        }
+      })();
+    </script>
+  </body>
+</html>
